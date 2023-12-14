@@ -1,0 +1,224 @@
+#include <iostream>
+#include <string>
+
+// Base class for entities in the management system
+class Entity {
+public:
+    std::string name;
+    std::string id;
+
+    Entity() : name("Unknown"), id("000") {}
+
+    Entity(const std::string& name, const std::string& id) : name(name), id(id) {}
+
+    virtual void display() const {
+        std::cout << "ID: " << id << ", Name: " << name;
+    }
+
+    bool operator==(const Entity& other) const {
+        return id == other.id;
+    }
+};
+
+// Book class for Library Management System
+class Book : public Entity {
+public:
+    std::string author;
+    bool isAvailable;
+
+    Book() : Entity(), author("Unknown"), isAvailable(true) {}
+
+    Book(const std::string& name, const std::string& id, const std::string& author)
+        : Entity(name, id), author(author), isAvailable(true) {}
+
+    void display() const override {
+        Entity::display();
+        std::cout << ", Author: " << author << ", Status: " << (isAvailable ? "Available" : "Checked Out") << std::endl;
+    }
+};
+
+// Composition: Library Management System manages a collection of Book objects
+class LibraryManagementSystem {
+private:
+    std::vector<Book> books;
+
+public:
+    void addBook(const Book& book) {
+        books.push_back(book);
+    }
+
+    void removeBookById(const std::string& bookId) {
+        books.erase(std::remove_if(books.begin(), books.end(),
+            [bookId](const Book& book) { return book.id == bookId; }),
+            books.end());
+    }
+
+    void displayBooks() const {
+        for (const auto& book : books) {
+            book.display();
+            std::cout << std::endl;
+        }
+    }
+
+    Book* findBookById(const std::string& bookId) {
+        for (auto& book : books) {
+            if (book.id == bookId) {
+                return &book;
+            }
+        }
+        return nullptr;
+    }
+};
+
+// Product class for Inventory Management System
+class Product : public Entity {
+public:
+    double price;
+    int quantity;
+
+    Product() : Entity(), price(0.0), quantity(0) {}
+
+    Product(const std::string& name, const std::string& id, double price, int quantity)
+        : Entity(name, id), price(price), quantity(quantity) {}
+
+    void display() const override {
+        Entity::display();
+        std::cout << ", Price: $" << price << ", Quantity: " << quantity << std::endl;
+    }
+};
+
+// Composition: Inventory Management System manages a collection of Product objects
+class InventoryManagementSystem {
+private:
+    std::vector<Product> products;
+
+public:
+    void addProduct(const Product& product) {
+        products.push_back(product);
+    }
+
+    void removeProductById(const std::string& productId) {
+        products.erase(std::remove_if(products.begin(), products.end(),
+            [productId](const Product& product) { return product.id == productId; }),
+            products.end());
+    }
+
+    void displayProducts() const {
+        for (const auto& product : products) {
+            product.display();
+            std::cout << std::endl;
+        }
+    }
+
+    double calculateTotalValue() const {
+        double totalValue = 0.0;
+        for (const auto& product : products) {
+            totalValue += product.price * product.quantity;
+        }
+        return totalValue;
+    }
+};
+
+// Simple command-line user interface
+void displayMenu() {
+    std::cout << "\nMenu:\n"
+              << "1. Add Entity\n"
+              << "2. Remove Entity\n"
+              << "3. Display Entities\n"
+              << "4. Quit\n";
+}
+
+int main() {
+    LibraryManagementSystem library;
+    InventoryManagementSystem inventory;
+
+    int choice;
+    std::string entityId;
+
+    do {
+        displayMenu();
+        std::cout << "Enter your choice: ";
+        std::cin >> choice;
+
+        switch (choice) {
+        case 1: {
+            int systemChoice;
+            std::cout << "Choose system (1. Library, 2. Inventory): ";
+            std::cin >> systemChoice;
+
+            if (systemChoice == 1) {
+                Book newBook;
+                std::cout << "Enter Book details:\n";
+                std::cout << "Name: ";
+                std::cin.ignore();  // Ignore the newline character in the buffer
+                std::getline(std::cin, newBook.name);
+                std::cout << "ID: ";
+                std::cin >> newBook.id;
+                std::cout << "Author: ";
+                std::cin.ignore();
+                std::getline(std::cin, newBook.author);
+                library.addBook(newBook);
+                std::cout << "Book added successfully.\n";
+            } else if (systemChoice == 2) {
+                Product newProduct;
+                std::cout << "Enter Product details:\n";
+                std::cout << "Name: ";
+                std::cin.ignore();
+                std::getline(std::cin, newProduct.name);
+                std::cout << "ID: ";
+                std::cin >> newProduct.id;
+                std::cout << "Price: $";
+                std::cin >> newProduct.price;
+                std::cout << "Quantity: ";
+                std::cin >> newProduct.quantity;
+                inventory.addProduct(newProduct);
+                std::cout << "Product added successfully.\n";
+            } else {
+                std::cout << "Invalid choice.\n";
+            }
+            break;
+        }
+        case 2: {
+            std::cout << "Enter Entity ID to remove: ";
+            std::cin >> entityId;
+
+            // Remove entity from the chosen system
+            if (library.findBookById(entityId) != nullptr) {
+                library.removeBookById(entityId);
+                std::cout << "Book removed successfully.\n";
+            } else if (inventory.findProductById(entityId) != nullptr) {
+                inventory.removeProductById(entityId);
+                std::cout << "Product removed successfully.\n";
+            } else {
+                std::cout << "Entity with ID " << entityId << " not found.\n";
+            }
+            break;
+        }
+        case 3: {
+            int systemChoice;
+            std::cout << "Choose system to display (1. Library, 2. Inventory): ";
+            std::cin >> systemChoice;
+
+            if (systemChoice == 1) {
+                std::cout << "\nLibrary Contents:\n";
+                library.displayBooks();
+            } else if (systemChoice == 2) {
+                std::cout << "\nInventory Contents:\n";
+                inventory.displayProducts();
+                std::cout << "\nTotal Inventory Value: $" << inventory.calculateTotalValue() << std::endl;
+            } else {
+                std::cout << "Invalid choice.\n";
+            }
+            break;
+        }
+        case 4:
+            std::cout << "Exiting the program.\n";
+            break;
+        default:
+            std::cout << "Invalid choice. Please enter a number between 1 and 4.\n";
+        }
+
+    } while (choice != 4);
+
+    return 0;
+}
