@@ -1,0 +1,143 @@
+#include <iostream>
+#include <vector>
+#include <string>
+
+// Base class for entities in the management system
+class Entity {
+public:
+    std::string name;
+    std::string id;
+
+    Entity() : name("Unknown"), id("000") {}
+
+    Entity(const std::string& name, const std::string& id) : name(name), id(id) {}
+
+    virtual void display() const {
+        std::cout << "ID: " << id << ", Name: " << name;
+    }
+
+    bool operator==(const Entity& other) const {
+        return id == other.id;
+    }
+};
+
+// Book class for Library Management System
+class Book : public Entity {
+public:
+    std::string author;
+    bool isAvailable;
+
+    Book() : Entity(), author("Unknown"), isAvailable(true) {}
+
+    Book(const std::string& name, const std::string& id, const std::string& author)
+        : Entity(name, id), author(author), isAvailable(true) {}
+
+    void display() const override {
+        Entity::display();
+        std::cout << ", Author: " << author << ", Status: " << (isAvailable ? "Available" : "Checked Out") << std::endl;
+    }
+};
+
+// Composition: Library Management System manages a collection of Book objects
+class LibraryManagementSystem {
+private:
+    std::vector<Book> books;
+
+public:
+    void addBook(const Book& book) {
+        books.push_back(book);
+    }
+
+    void displayBooks() const {
+        for (const auto& book : books) {
+            book.display();
+            std::cout << std::endl;
+        }
+    }
+
+    Book* findBookById(const std::string& bookId) {
+        for (auto& book : books) {
+            if (book.id == bookId) {
+                return &book;
+            }
+        }
+        return nullptr;
+    }
+};
+
+// Product class for Inventory Management System
+class Product : public Entity {
+public:
+    double price;
+    int quantity;
+
+    Product() : Entity(), price(0.0), quantity(0) {}
+
+    Product(const std::string& name, const std::string& id, double price, int quantity)
+        : Entity(name, id), price(price), quantity(quantity) {}
+
+    void display() const override {
+        Entity::display();
+        std::cout << ", Price: $" << price << ", Quantity: " << quantity << std::endl;
+    }
+};
+
+// Composition: Inventory Management System manages a collection of Product objects
+class InventoryManagementSystem {
+private:
+    std::vector<Product> products;
+
+public:
+    void addProduct(const Product& product) {
+        products.push_back(product);
+    }
+
+    void displayProducts() const {
+        for (const auto& product : products) {
+            product.display();
+            std::cout << std::endl;
+        }
+    }
+
+    double calculateTotalValue() const {
+        double totalValue = 0.0;
+        for (const auto& product : products) {
+            totalValue += product.price * product.quantity;
+        }
+        return totalValue;
+    }
+};
+
+int main() {
+    // Example usage for Library Management System
+    LibraryManagementSystem library;
+
+    Book book1("The Catcher in the Rye", "001", "J.D. Salinger");
+    Book book2("To Kill a Mockingbird", "002", "Harper Lee");
+
+    library.addBook(book1);
+    library.addBook(book2);
+
+    std::cout << "Library Contents:" << std::endl;
+    library.displayBooks();
+
+    std::cout << "\n---------------------------------\n";
+
+    // Example usage for Inventory Management System
+    InventoryManagementSystem inventory;
+
+    Product product1("Laptop", "101", 1200.0, 5);
+    Product product2("Smartphone", "102", 800.0, 10);
+
+    inventory.addProduct(product1);
+    inventory.addProduct(product2);
+
+    std::cout << "\nInventory Contents:" << std::endl;
+    inventory.displayProducts();
+
+    // Example: Calculating total value of inventory
+    double totalValue = inventory.calculateTotalValue();
+    std::cout << "\nTotal Inventory Value: $" << totalValue << std::endl;
+
+    return 0;
+}
